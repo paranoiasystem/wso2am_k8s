@@ -58,11 +58,11 @@ spec:
           periodSeconds: 10
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "2000m"
+            memory: 512Mi
+            cpu: 250m
           limits:
-            memory: "2Gi"
-            cpu: "4000m"
+            memory: 1Gi
+            cpu: 1500m
   volumeClaimTemplates:
   - metadata:
       name: wso2am-postgresql-db
