@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wso2am-postgresql-db
+  namespace: wso2am
+spec:
+  serviceName: wso2am-postgresql-db-service
+  selector:
+    matchLabels:
+      app: wso2am-postgresql-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: wso2am-postgresql-db
+    spec:
+      securityContext:
+        fsGroup: 999
+      containers:
+      - name: wso2am-postgresql-db
+        image: postgres:13.11-bullseye
+        args:
+        - -c
+        - max_connections=1000
+        - -c
+        - shared_buffers=1024MB
+        env:
+        - name: POSTGRES_PASSWORD
+          value: testpassword
+        - name: PGDATA
+          value: /data/pgdata/db
+          # - name: POSTGRES_DB
+          #   value: wso2
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: wso2am-postgresql-db
+          mountPath: /data/pgdata
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U postgres
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "2000m"
+          limits:
+            memory: "2Gi"
+            cpu: "4000m"
+  volumeClaimTemplates:
+  - metadata:
+      name: wso2am-postgresql-db
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "nfs-client"
+      resources:
+        requests:
+          storage: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wso2am-postgresql-db-service
+  namespace: wso2am
+spec:
+  selector:
+    app: wso2am-postgresql-db
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wso2am-postgresql-init-db
+  namespace: wso2am
+spec:
+  template:
+    metadata:
+      name: wso2am-postgresql-init-db
+      labels:
+        app: wso2am-postgresql-init-db
+    spec:
+      initContainers:
+      - name: wait-db
+        image: busybox:1.32
+        command: ['sh', '-c', 'echo -e "Checking for the availability of DB Server deployment"; while ! nc -z "wso2am-postgresql-db-service" 5432; do sleep 1; printf "-"; done; echo -e "  >> DB Server has started";']
+      containers:
+      - image: postgres:latest
+        name: wso2am-postgresql-init-db
+        command: ["bin/bash", "/config/init-db.sh"]
+        volumeMounts:
+        - name: wso2am-postgres-initdb-config
+          mountPath: /config
+      volumes:
+      - name: wso2am-postgres-initdb-config
+        configMap:
+          name: wso2am-postgres-initdb-config
+      restartPolicy: OnFailure
+  backoffLimit: 4

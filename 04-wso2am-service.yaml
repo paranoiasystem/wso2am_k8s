@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wso2am-service
+  namespace: wso2am
+spec:
+  selector:
+    app: wso2am
+  type: ClusterIP
+  ports:
+  - name: apim-http
+    protocol: TCP
+    port: 8280
+    targetPort: 8280
+  - name: apim-https
+    protocol: TCP
+    port: 8243
+    targetPort: 8243
+  - name: throtling-http
+    protocol: TCP
+    port: 9611
+    targetPort: 9611
+  - name: throtling-https
+    protocol: TCP
+    port: 9711
+    targetPort: 9711
+  - name: internal-broker
+    protocol: TCP
+    port: 5672
+    targetPort: 5672
+  - name: managment-https
+    protocol: TCP
+    port: 9443
+    targetPort: 9443
+  - name: managment-http
+    protocol: TCP
+    port: 9763
+    targetPort: 9763

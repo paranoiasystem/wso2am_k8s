@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wso2am-deployment
+  namespace: wso2am
+  labels:
+    app: wso2am
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: wso2am
+  template:
+    metadata:
+      labels:
+        app: wso2am
+    spec:
+      initContainers:
+      - name: init-db
+        image: busybox:1.32
+        command: ['sh', '-c', 'echo -e "Checking for the availability of DB Server deployment"; while ! nc -z "wso2am-postgresql-db-service" 5432; do sleep 1; printf "-"; done; echo -e "  >> DB Server has started";']
+      - name: init-db-connector-download
+        image: busybox:1.32
+        command:
+        - /bin/sh
+        - "-c"
+        - |
+          set -e
+          connector_version=42.2.12
+          wget "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.12/postgresql-42.2.12.jar" -P /db-connector-jar/
+        volumeMounts:
+        - name: db-connector-jar
+          mountPath: /db-connector-jar
+      containers:
+      - name: wso2am
+        image: paranoiasystem93/wso2:7
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /services/Version
+            port: 9763
+          initialDelaySeconds: 180
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /services/Version
+            port: 9763
+          initialDelaySeconds: 180
+          periodSeconds: 10
+        lifecycle:
+          preStop:
+            exec:
+              command: ['sh', '-c', '${WSO2_SERVER_HOME}/bin/api-manager.sh stop']
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 1000m
+          limits:
+            memory: 2Gi
+            cpu: 2000m
+        securityContext:
+          runAsUser: 802
+        ports:
+        - name: apim-http
+          containerPort: 8280
+          protocol: "TCP"
+        - name: apim-https
+          containerPort: 8243
+          protocol: "TCP"
+        - name: managment-http
+          containerPort: 9763
+          protocol: "TCP"
+        - name: managment-https
+          containerPort: 9443
+          protocol: "TCP"
+        - name: throtling-https
+          containerPort: 9711
+          protocol: "TCP"
+        - name: throtling-http
+          containerPort: 9611
+          protocol: "TCP"
+        - name: internal-broker
+          containerPort: 5672
+          protocol: "TCP"
+        env:
+        - name: JVM_MEM_OPTS
+          value: "-Xms1024m -Xmx1024m"
+        volumeMounts:
+        - name: wso2am-conf
+          mountPath: /home/wso2carbon/wso2-config-volume/repository/conf
+        - name: wso2am-local-carbon-database-storage
+          mountPath: /home/wso2carbon/solr/database
+        - name: wso2am-solr-indexed-data-storage
+          mountPath: /home/wso2carbon/solr/indexed-data
+        - name: wso2am-conf-entrypoint
+          mountPath: /home/wso2carbon/docker-entrypoint.sh
+          subPath: docker-entrypoint.sh
+        - name: db-connector-jar
+          mountPath: /home/wso2carbon/wso2-artifact-volume/repository/components/lib
+      volumes:
+      - name: wso2am-conf
+        configMap:
+          name: wso2am-conf
+      - name: wso2am-local-carbon-database-storage
+        persistentVolumeClaim:
+          claimName: wso2am-local-carbon-database-volume-claim
+      - name: wso2am-solr-indexed-data-storage
+        persistentVolumeClaim:
+          claimName: wso2am-solr-indexed-data-volume-claim
+      - name: wso2am-conf-entrypoint
+        configMap:
+          name: wso2am-conf-entrypoint
+          defaultMode: 0407
+      - name: db-connector-jar
+        emptyDir: {}

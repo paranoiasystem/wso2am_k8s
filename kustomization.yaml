@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wso2am
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- name: postgres-db-secret
+  namespace: wso2am
+  literals:
+  - username=postgres
+  - password=testpassword
+
+configMapGenerator:
+- name: wso2am-postgres-initdb-config
+  files:
+  - conf/postgres/init-db.sh
+  - conf/postgres/postgres_apim.sql
+  - conf/postgres/postgres_shared.sql
+- name: wso2am-conf
+  files:
+  - conf/wso2am/deployment.toml
+- name: wso2am-conf-entrypoint
+  files:
+  - conf/wso2am/docker-entrypoint.sh
+
+
+resources:
+- 00-namespace.yaml
+- 01-postgres-satefulset-service.yaml
+- 02-wso2am-pvc.yaml
+- 03-wso2am-deployment.yaml
+- 04-wso2am-service.yaml
+
