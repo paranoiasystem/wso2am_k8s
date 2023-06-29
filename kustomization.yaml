@@ -32,4 +32,5 @@ resources:
 - 02-wso2am-pvc.yaml
 - 03-wso2am-deployment.yaml
 - 04-wso2am-service.yaml
+- 05-wso2am-ingress.yaml
 
