@@ -2,3 +2,14 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: wso2am
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: wso2
+spec:
+  hard:
+    requests.cpu: 2
+    requests.memory: 2G
+    limits.cpu: 2
+    limits.memory: 2G
