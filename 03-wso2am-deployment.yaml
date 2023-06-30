@@ -21,6 +21,12 @@ spec:
       - name: init-db
         image: busybox:1.32
         command: ['sh', '-c', 'echo -e "Checking for the availability of DB Server deployment"; while ! nc -z "wso2am-postgresql-db-service" 5432; do sleep 1; printf "-"; done; echo -e "  >> DB Server has started";']
+        resources:
+          requests:
+            memory: 128M
+            cpu: 100m
+          limits:
+            memory: 128M
       - name: init-db-connector-download
         image: busybox:1.32
         command:
@@ -30,6 +36,12 @@ spec:
           set -e
           connector_version=42.2.12
           wget "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.12/postgresql-42.2.12.jar" -P /db-connector-jar/
+        resources:
+          requests:
+            memory: 128M
+            cpu: 100m
+          limits:
+            memory: 128M
         volumeMounts:
         - name: db-connector-jar
           mountPath: /db-connector-jar

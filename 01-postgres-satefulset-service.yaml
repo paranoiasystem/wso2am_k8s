@@ -101,10 +101,22 @@ spec:
       - name: wait-db
         image: busybox:1.32
         command: ['sh', '-c', 'echo -e "Checking for the availability of DB Server deployment"; while ! nc -z "wso2am-postgresql-db-service" 5432; do sleep 1; printf "-"; done; echo -e "  >> DB Server has started";']
+        resources:
+          requests:
+            memory: 128M
+            cpu: 100m
+          limits:
+            memory: 128M
       containers:
       - image: postgres:latest
         name: wso2am-postgresql-init-db
         command: ["bin/bash", "/config/init-db.sh"]
+        resources:
+          requests:
+            memory: 128M
+            cpu: 100m
+          limits:
+            memory: 128M
         volumeMounts:
         - name: wso2am-postgres-initdb-config
           mountPath: /config
