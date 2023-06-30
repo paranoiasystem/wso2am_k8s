@@ -9,7 +9,7 @@ metadata:
   name: wso2
 spec:
   hard:
-    requests.cpu: 250
+    requests.cpu: 500
     requests.memory: 3G
-    limits.cpu: 250
+    limits.cpu: 500
     limits.memory: 3G
