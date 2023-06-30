@@ -70,10 +70,10 @@ spec:
         resources:
           requests:
             memory: 1G
-            cpu: 100m
+            cpu: 250m
           limits:
             memory: 2G
-            cpu: 250m
+            cpu: 750m
         securityContext:
           runAsUser: 802
         ports:
