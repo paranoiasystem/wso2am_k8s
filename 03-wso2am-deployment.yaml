@@ -69,8 +69,8 @@ spec:
               command: ['sh', '-c', '${WSO2_SERVER_HOME}/bin/api-manager.sh stop']
         resources:
           requests:
-            memory: 2G
-            cpu: 100m
+            memory: 1G
+            cpu: 50m
           limits:
             memory: 2G
             cpu: 100m
