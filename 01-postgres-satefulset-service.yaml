@@ -62,6 +62,7 @@ spec:
             cpu: 250m
           limits:
             memory: 512M
+            cpu: 250m
   volumeClaimTemplates:
   - metadata:
       name: wso2am-postgresql-db
@@ -107,6 +108,7 @@ spec:
             cpu: 100m
           limits:
             memory: 128M
+            cpu: 100m
       containers:
       - image: postgres:latest
         name: wso2am-postgresql-init-db
@@ -117,6 +119,7 @@ spec:
             cpu: 100m
           limits:
             memory: 128M
+            cpu: 100m
         volumeMounts:
         - name: wso2am-postgres-initdb-config
           mountPath: /config
